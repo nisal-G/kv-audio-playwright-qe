@@ -1,0 +1,26 @@
+{
+  "name": "kv-audio-e2e-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "End-to-end tests for KV Audio application using Playwright",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:chrome": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:mobile": "playwright test --project=mobile-chrome",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen http://localhost:5173"
+  },
+  "keywords": ["playwright", "e2e", "testing", "automation"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.3.3",
+    "dotenv": "^17.3.1"
+  }
+}
