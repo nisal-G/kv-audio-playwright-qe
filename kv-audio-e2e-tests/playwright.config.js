@@ -11,13 +11,13 @@ export default defineConfig({
   fullyParallel: false, // DISABLED parallel to reduce memory usage
   retries: process.env.CI ? 2 : 0,
   workers: 1, // LIMIT to 1 worker to prevent memory issues
-  
+
   // add html report and it not automatically open after execute tests
   reporter: [
     ['list'], // show progress in console
     ['html', { open: 'never' }]
   ],
-  
+
   use: {
     baseURL: 'http://localhost:5173', // url that always use by playwright
     trace: 'on-first-retry',
@@ -29,8 +29,8 @@ export default defineConfig({
   // Uncomment other browsers when needed
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    //  { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 
   // WebServer disabled - start manually before running tests
