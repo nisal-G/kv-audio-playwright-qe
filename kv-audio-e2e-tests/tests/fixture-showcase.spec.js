@@ -517,32 +517,6 @@ test.describe('PROFILE TESTS', () => {
 
 });
 
-// SKIPPED TESTS - Future implementation placeholders
-test.describe('SKIPPED TESTS', () => {
-
-  test.skip('payment gateway integration', async ({ cartReadyPage }) => {
-    console.log('Payment integration test skipped - requires gateway setup');
-    
-    // TODO: Implement when payment system is configured
-    // await cartReadyPage.goto('http://localhost:5173/checkout');
-    // await cartReadyPage.fill('[data-testid="card-number"]', '4111111111111111');
-    // await cartReadyPage.fill('[data-testid="expiry"]', '12/25');
-    // await cartReadyPage.fill('[data-testid="cvv"]', '123');
-    // await cartReadyPage.click('[data-testid="pay-now"]');
-    // await expect(cartReadyPage.locator('[data-testid="payment-success"]')).toBeVisible();
-  });
-
-  test.skip('email notification system', async ({ loggedInPage }) => {
-    console.log('Email notification test skipped - requires email service');
-    
-    // TODO: Implement when email notifications are configured
-    // await loggedInPage.goto('http://localhost:5173/profile');
-    // await loggedInPage.click('[data-testid="enable-notifications"]');
-    // await expect(loggedInPage.locator('[data-testid="notification-enabled"]')).toBeVisible();
-  });
-
-});
-
 // =============================================================================
 // CLEANUP AND REPORTING
 // =============================================================================
