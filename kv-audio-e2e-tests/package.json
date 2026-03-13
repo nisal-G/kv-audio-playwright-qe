@@ -15,7 +15,12 @@
     "report": "playwright show-report",
     "codegen": "playwright codegen http://localhost:5173"
   },
-  "keywords": ["playwright", "e2e", "testing", "automation"],
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "automation"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
