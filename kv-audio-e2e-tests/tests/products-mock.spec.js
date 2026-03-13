@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 
+// This test file demonstrates Playwright API mocking.
+// Instead of calling the real backend controller,
+// API requests are intercepted and replaced with mock responses.
+
 test('Scenario 1: successful API response renders mocked products', async ({ page }) => {
   // Keep browser storage clean so login/session state does not affect this demo.
   await page.addInitScript(() => {
@@ -47,8 +51,15 @@ test('Scenario 1: successful API response renders mocked products', async ({ pag
     });
   });
 
+  // Start waiting for the products request before navigation.
+  // This proves the frontend actually made the request.
+  const productsRequestPromise = page.waitForRequest('**/api/products/get/**');
+
   // Open /items. The page makes an API request, which is intercepted above.
   await page.goto('/items');
+
+  // Confirm that the request was really sent by the browser.
+  await productsRequestPromise;
 
   // Validate that UI content is built from our mocked response body.
   await expect(page.getByRole('heading', { name: 'Items & Equipment' })).toBeVisible();
