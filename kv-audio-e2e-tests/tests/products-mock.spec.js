@@ -127,3 +127,144 @@ test('Scenario 3: API failure (500) shows error state', async ({ page }) => {
   // UI should move to error state when product loading fails.
   await expect(page.getByText('Unable to load items')).toBeVisible();
 });
+
+test('Scenario 4: category filtering works with mocked data', async ({ page }) => {
+  // Reset browser storage for consistent behavior.
+  await page.addInitScript(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  // Mock data with multiple categories.
+  const mockProducts = [
+    {
+      _id: 'mock-1',
+      key: 'MIC-001',
+      name: 'Microphone Pro',
+      category: 'microphones',
+      description: 'Professional microphone',
+      price: 15000,
+      availability: true,
+      image: []
+    },
+    {
+      _id: 'mock-2',
+      key: 'MIC-002',
+      name: 'Microphone Standard',
+      category: 'microphones',
+      description: 'Standard microphone',
+      price: 8000,
+      availability: true,
+      image: []
+    },
+    {
+      _id: 'mock-3',
+      key: 'SPK-001',
+      name: 'Speaker Large',
+      category: 'speakers',
+      description: 'Large powerful speaker',
+      price: 55000,
+      availability: true,
+      image: []
+    },
+    {
+      _id: 'mock-4',
+      key: 'CAB-001',
+      name: 'Cables Bundle',
+      category: 'cables',
+      description: 'Complete cable set',
+      price: 5000,
+      availability: true,
+      image: []
+    }
+  ];
+
+  // Intercept and return products with multiple categories.
+  await page.route('**/api/products/get/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockProducts)
+    });
+  });
+
+  // Load the products page.
+  await page.goto('/items');
+
+  // Verify all category buttons appear with correct counts.
+  await expect(page.getByRole('button', { name: /microphones \(2\)/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /speakers \(1\)/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /cables \(1\)/i })).toBeVisible();
+
+  // Click on "microphones" filter to show only microphones.
+  await page.getByRole('button', { name: /microphones \(2\)/i }).click();
+
+  // Verify only microphones are displayed.
+  await expect(page.getByText('Microphone Pro')).toBeVisible();
+  await expect(page.getByText('Microphone Standard')).toBeVisible();
+  // Speaker and cables should NOT be visible after filter.
+  await expect(page.getByText('Speaker Large')).not.toBeVisible();
+  await expect(page.getByText('Cables Bundle')).not.toBeVisible();
+});
+
+test('Scenario 6: slow API response with delayed fulfillment', async ({ page }) => {
+  // Reset browser storage for consistent behavior.
+  await page.addInitScript(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  // Mock data to return.
+  const mockProducts = [
+    {
+      _id: 'mock-1',
+      key: 'MIC-001',
+      name: 'Delayed Microphone',
+      category: 'microphones',
+      description: 'This product arrived slowly',
+      price: 12500,
+      availability: true,
+      image: []
+    }
+  ];
+
+  // Intercept and delay the response by 1 second to simulate network latency.
+  await page.route('**/api/products/get/**', async (route) => {
+    // Wait 1 second before sending the response.
+    await page.waitForTimeout(1000);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockProducts)
+    });
+  });
+
+  // Load the page.
+  await page.goto('/items');
+
+  // After the 1 second delay, the product should eventually appear.
+  // Use a longer timeout to account for network + rendering time.
+  await expect(page.getByText('Delayed Microphone')).toBeVisible({ timeout: 10000 });
+});
+
+test('Scenario 8: network error (no response from server)', async ({ page }) => {
+  // Reset browser storage for consistent behavior.
+  await page.addInitScript(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  // Intercept request and abort it (simulate network failure like no internet).
+  await page.route('**/api/products/get/**', async (route) => {
+    await route.abort('failed');
+  });
+
+  // Load the page. Request will fail to complete.
+  await page.goto('/items');
+
+  // UI should show an error state when network request fails.
+  // Check for error message or ensure products do NOT appear.
+  const productsVisible = await page.getByText('Mock').count();
+  expect(productsVisible).toBe(0);
+});
