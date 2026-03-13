@@ -5,10 +5,11 @@ test('Product cards should display correctly', async ({ page }) => {
 
   await page.goto('http://localhost:5173/items');
 
-  const productCard = page.locator('div');
+  const productTitle = page.locator('h3').first();
+  const viewButton = page.getByRole('link', { name: 'View Details' }).first();
 
-  await expect(productCards.first()).toBeVisible();
+  await expect(productTitle).toBeVisible();
+  await expect(viewButton).toBeVisible();
 
 });
-
 //this tests verifies that the product cards are visible on the product page.
