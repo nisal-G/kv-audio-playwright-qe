@@ -207,7 +207,7 @@ test('Scenario 4: category filtering works with mocked data', async ({ page }) =
   await expect(page.getByText('Cables Bundle')).not.toBeVisible();
 });
 
-test('Scenario 6: slow API response with delayed fulfillment', async ({ page }) => {
+test('Scenario 5: slow API response with delayed fulfillment', async ({ page }) => {
   // Reset browser storage for consistent behavior.
   await page.addInitScript(() => {
     localStorage.clear();
@@ -248,7 +248,7 @@ test('Scenario 6: slow API response with delayed fulfillment', async ({ page }) 
   await expect(page.getByText('Delayed Microphone')).toBeVisible({ timeout: 10000 });
 });
 
-test('Scenario 8: network error (no response from server)', async ({ page }) => {
+test('Scenario 6: network error (no response from server)', async ({ page }) => {
   // Reset browser storage for consistent behavior.
   await page.addInitScript(() => {
     localStorage.clear();
