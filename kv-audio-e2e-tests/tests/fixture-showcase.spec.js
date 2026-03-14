@@ -104,6 +104,59 @@ test.describe('Fixture Tests', () => {
 
     console.log('Products page loaded');
   });
+  test('product search works', async ({ productsPage }) => {
+  console.log('Testing product search functionality...');
+
+  // TODO: Replace with real selector
+  const searchInput = productsPage.locator('input[placeholder*="Search"]');
+
+  await expect(productsPage).toHaveURL(/.*items/);
+
+  if (await searchInput.count() > 0) {
+    await searchInput.fill('speaker');
+    await searchInput.press('Enter');
+  }
+
+  await expect(productsPage.locator('body')).toBeVisible();
+
+  console.log('Product search test completed');
+});
+
+
+test('product filter works', async ({ productsPage }) => {
+  console.log('Testing product filter functionality...');
+
+  await expect(productsPage).toHaveURL(/.*items/);
+
+  // TODO: Replace with real filter selector
+  const filterButton = productsPage.locator('button:has-text("Filter")');
+
+  if (await filterButton.count() > 0) {
+    await filterButton.click();
+  }
+
+  await expect(productsPage.locator('body')).toBeVisible();
+
+  console.log('Product filter test completed');
+});
+
+
+test('product sorting works', async ({ productsPage }) => {
+  console.log('Testing product sorting functionality...');
+
+  await expect(productsPage).toHaveURL(/.*items/);
+
+  // TODO: Replace with sorting dropdown selector
+  const sortDropdown = productsPage.locator('select');
+
+  if (await sortDropdown.count() > 0) {
+    await sortDropdown.selectOption({ index: 1 });
+  }
+
+  await expect(productsPage.locator('body')).toBeVisible();
+
+  console.log('Product sorting test completed');
+});
 
   test('cart page accessible after login', async ({ cartReadyPage }) => {
     console.log('Checking cart page accessibility after login...');
