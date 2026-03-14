@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 // This test file demonstrates Playwright API mocking.
 // Instead of calling the real backend controller,
 // API requests are intercepted and replaced with mock responses.
+//This shows how Playwright can test frontend behavior under different backend conditions
 
 test('Scenario 1: successful API response renders mocked products', async ({ page }) => {
   // Keep browser storage clean so login/session state does not affect this demo.
