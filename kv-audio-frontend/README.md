@@ -1,569 +1,407 @@
-# KV Audio - Frontend Application
+# 🎵 KV Audio — Audio Equipment Rental Platform
 
-A modern, responsive, and feature-rich web application for KV Audio, a professional audio equipment rental and sales platform built with React and Vite.
+A full-stack web application for renting professional audio equipment — built with a modern React frontend, a Node.js/Express/MongoDB backend, and a comprehensive Playwright end-to-end test suite.
+
+---
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [Configuration](#configuration)
-- [Key Components](#key-components)
-- [Pages](#pages)
-- [Authentication](#authentication)
-- [Deployment](#deployment)
+- [Project Overview](#-project-overview)
+- [System Architecture](#-system-architecture)
+- [Technologies Used](#-technologies-used)
+- [Key Features](#-key-features)
+- [Folder Structure](#-folder-structure)
+- [Setup Instructions](#-setup-instructions)
+- [How to Run](#-how-to-run)
+- [Running Tests](#-running-tests)
+- [Contribution](#-contribution)
 
 ---
 
-## 🎯 Overview
+## 🔍 Project Overview
 
-The KV Audio Frontend is a cutting-edge React-based single-page application (SPA) that delivers a premium user experience for browsing, renting, and purchasing professional audio equipment. Built with modern web technologies and best practices, it features a clean, professional UI with full mobile responsiveness.
+**KV Audio** is an online rental platform designed for event planners, musicians, and production teams to browse and book professional audio equipment — including microphones, speakers, cables, and more. The platform supports two user roles:
 
-## ✨ Features
+- **Customer** — Browse the product catalog, submit rental bookings, leave reviews, and manage their profile.
+- **Admin** — Manage the full inventory, approve or reject bookings, moderate reviews, and manage user accounts.
 
-### User Experience
-- ✅ Modern, clean, and professional UI/UX design
-- ✅ Fully responsive mobile-first design
-- ✅ Smooth animations and transitions
-- ✅ Interactive image sliders and carousels
-- ✅ Toast notifications for user feedback
-- ✅ Intuitive navigation with mobile menu
+The project is composed of three self-contained modules:
+
+| Module | Description |
+|---|---|
+| `kv-audio-frontend` | React-based SPA with routing, authentication, and a polished UI |
+| `kv-audio-backend` | RESTful API built with Express.js, secured with JWT authentication |
+| `kv-audio-e2e-tests` | Playwright-based end-to-end test suite covering UI flows and API mocking |
+
+---
+
+## 🏗️ System Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        CLIENT (Browser)                          │
+│                                                                  │
+│   ┌──────────────────────────────────────────────────────────┐   │
+│   │         React Frontend  ·  Vite  ·  TailwindCSS          │   │
+│   │  Pages: Home · Items · Booking · Admin · Login · Register │   │
+│   └─────────────────────┬────────────────────────────────────┘   │
+│                         │  HTTP / Axios                          │
+└─────────────────────────┼────────────────────────────────────────┘
+                          │
+┌─────────────────────────▼────────────────────────────────────────┐
+│                   Node.js  /  Express  Backend                   │
+│                                                                  │
+│   ┌──────────────────────────────────────────────────────────┐   │
+│   │  Routes & Controllers                                    │   │
+│   │  /api/users · /api/products · /api/orders               │   │
+│   │  /api/reviews · /api/inquiries                          │   │
+│   └──────────────┬───────────────────────────────────────────┘   │
+│                  │  JWT Middleware  (Auth & Role Guard)           │
+│   ┌──────────────▼───────────────────────────────────────────┐   │
+│   │  Mongoose Models                                         │   │
+│   │  User · Product · Order · Review · Inquiry · OTP        │   │
+│   └──────────────┬───────────────────────────────────────────┘   │
+└──────────────────┼───────────────────────────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────────────────────────┐
+│                    MongoDB Atlas  (Cloud DB)                      │
+└──────────────────────────────────────────────────────────────────┘
+
+       ┌──────────────────────────────────────────┐
+       │  Playwright E2E Test Suite               │
+       │  Targets  →  http://localhost:5173       │
+       │  Browsers →  Chromium  ·  Firefox        │
+       └──────────────────────────────────────────┘
+```
+
+### Data Flow
+
+1. The user interacts with the **React frontend** served at `http://localhost:5173`.
+2. The frontend makes authenticated API calls (with JWT in the `Authorization` header) to the **Express backend** at `http://localhost:3000`.
+3. The backend validates the token, applies role-based access control (Admin / Customer), and communicates with **MongoDB Atlas**.
+4. **Supabase Storage** handles product image uploads on the frontend.
+5. **Google OAuth 2.0** is supported for one-click user login via `@react-oauth/google`.
+6. **Nodemailer** sends 6-digit OTP codes for email verification.
+7. **Playwright** tests interact with the live frontend and can mock backend API responses to test frontend behavior in isolation.
+
+---
+
+## 🛠️ Technologies Used
+
+### Frontend
+
+| Category | Technology |
+|---|---|
+| Framework | React 19 (with Vite) |
+| Routing | React Router DOM v7 |
+| Styling | TailwindCSS v4 |
+| HTTP Client | Axios |
+| Authentication | JWT (localStorage), Google OAuth (`@react-oauth/google`) |
+| Image Storage | Supabase Storage (`@supabase/supabase-js`) |
+| Notifications | React Hot Toast |
+| Icons | React Icons |
+| Build Tool | Vite 7 |
+| Linting | ESLint 9 |
+| Deployment | Vercel |
+
+### Backend
+
+| Category | Technology |
+|---|---|
+| Runtime | Node.js (ES Modules) |
+| Framework | Express.js v4 |
+| Database | MongoDB (via Mongoose v8) |
+| Authentication | JSON Web Tokens (`jsonwebtoken`) |
+| Password Hashing | bcrypt |
+| Email Service | Nodemailer (Gmail SMTP) |
+| Google Auth | Axios → Google UserInfo API |
+| Config | dotenv |
+| Dev Server | Nodemon |
+| Middleware | body-parser, cors |
+
+### Testing
+
+| Category | Technology |
+|---|---|
+| Framework | Playwright v1.58 |
+| Language | JavaScript (ES Modules) |
+| Browsers | Chromium, Firefox (WebKit available) |
+| Reporting | HTML report + console list reporter |
+| Patterns | Custom Fixtures, Page Object Model, API Mocking |
+| Config | `playwright.config.js` + dotenv |
+
+---
+
+## ✨ Key Features
 
 ### Customer Features
-- ✅ Browse audio equipment catalog with advanced filtering
-- ✅ Detailed product overview with image galleries
-- ✅ Rental booking system with date selection
-- ✅ User registration and authentication
-- ✅ Google OAuth integration
-- ✅ Email verification with OTP
-- ✅ Customer review submission
-- ✅ Contact form for inquiries
-- ✅ User profile management with avatar
-- ✅ Order history and tracking
+
+- 🔐 **Authentication** — Register, log in with email/password, or sign in instantly with Google OAuth
+- 📧 **Email Verification** — OTP-based email verification sent via Nodemailer
+- 🎛️ **Product Catalog** — Browse audio equipment with category filters and search
+- 📄 **Product Details** — View full specifications, pricing, dimensions, and availability
+- 🛒 **Booking System** — Select items, choose rental dates, and submit booking orders
+- ⭐ **Reviews** — Submit and view product reviews
+- 📬 **Inquiries** — Contact the team through a built-in inquiry form
+- 👤 **Profile Management** — Update personal details and view booking history
 
 ### Admin Features
-- ✅ Comprehensive admin dashboard
-- ✅ Product management (CRUD operations)
-- ✅ User management and blocking
-- ✅ Order approval and tracking
-- ✅ Review moderation system
-- ✅ Inquiry management and responses
-- ✅ Analytics and reporting
 
-### Additional Features
-- ✅ About Us page with company information
-- ✅ Gallery showcase
-- ✅ Professional footer with links
-- ✅ Secure authentication flow
-- ✅ Role-based access control
+- 📊 **Dashboard** — Overview of orders, users, and products
+- 📦 **Product Management** — Add, update, and manage the equipment inventory
+- 📋 **Order Management** — View, approve, or reject customer bookings
+- 👥 **User Management** — List all customers, block or unblock accounts
+- 💬 **Review Moderation** — View and manage customer reviews
 
----
+### Testing Features
 
-## 🛠 Technology Stack
-
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **React** | UI library | 19.2.0 |
-| **Vite** | Build tool and dev server | 7.2.4 |
-| **TailwindCSS** | Utility-first CSS framework | 4.1.18 |
-| **React Router DOM** | Client-side routing | 7.10.1 |
-| **Axios** | HTTP client | 1.13.2 |
-| **React Hot Toast** | Toast notifications | 2.6.0 |
-| **React Icons** | Icon library | 5.5.0 |
-| **Google OAuth** | Google authentication | 0.13.4 |
-| **Supabase** | Cloud storage for images | 2.89.0 |
-| **ESLint** | Code linting | 9.39.1 |
+- 🧪 **Custom Fixtures** — Reusable Playwright fixtures for authenticated sessions, products page, cart state, and admin access
+- 🌐 **API Mocking** — Intercept and mock backend responses to test 6 scenarios: success, empty state, HTTP 500, slow response, and network failure
+- ✅ **Assertion Specs** — Dedicated tests for homepage, login, navigation, product list, product overview, and category filtering
+- 🔒 **Security Tests** — Verify unauthorized users are redirected away from the admin panel
+- 🖥️ **Cross-Browser** — Configured for Chromium and Firefox
+- 📸 **Screenshots on Failure** — Automatically captured screenshots for failed test runs
 
 ---
 
-## 🚀 Getting Started
+## 📁 Folder Structure
+
+```
+kv-audio-playwright-qe/
+│
+├── kv-audio-frontend/               # React SPA (Vite + TailwindCSS)
+│   ├── public/                      # Static assets
+│   ├── src/
+│   │   ├── assets/                  # Images and static files
+│   │   ├── components/              # Shared UI components
+│   │   │   ├── header.jsx
+│   │   │   ├── productCard.jsx
+│   │   │   ├── bookingItem.jsx
+│   │   │   ├── imageSlider.jsx
+│   │   │   ├── mobileNavPannel.jsx
+│   │   │   └── Footer/
+│   │   ├── pages/
+│   │   │   ├── home/                # Customer-facing pages
+│   │   │   │   ├── home.jsx         # Landing page
+│   │   │   │   ├── items.jsx        # Product catalog
+│   │   │   │   ├── productOverview.jsx
+│   │   │   │   ├── bookingPage.jsx  # Rental booking flow
+│   │   │   │   ├── aboutUs.jsx
+│   │   │   │   ├── contactUs.jsx
+│   │   │   │   └── gallery.jsx
+│   │   │   ├── admin/               # Admin panel
+│   │   │   │   ├── adminPage.jsx
+│   │   │   │   ├── adminBookingPage.jsx
+│   │   │   │   ├── adminItemsPage.jsx
+│   │   │   │   ├── adminUsersPage.jsx
+│   │   │   │   ├── adminReviewsPage.jsx
+│   │   │   │   ├── addItemPage.jsx
+│   │   │   │   └── updateItemsPage.jsx
+│   │   │   ├── login/
+│   │   │   ├── register/
+│   │   │   └── verifyEmail/
+│   │   ├── utils/
+│   │   ├── App.jsx                  # Root routing
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── vercel.json
+│   └── package.json
+│
+├── kv-audio-backend/                # Express.js REST API
+│   ├── controllers/
+│   │   ├── userController.js        # Auth, Google OAuth, OTP, user management
+│   │   ├── productController.js     # Equipment CRUD
+│   │   ├── orderController.js       # Booking & order management
+│   │   ├── reviewController.js
+│   │   └── inquiryController.js
+│   ├── models/
+│   │   ├── user.js                  # Roles, email verification, block status
+│   │   ├── product.js               # Name, price, category, availability
+│   │   ├── order.js                 # Items, rental dates, status, total
+│   │   ├── review.js
+│   │   ├── inquiry.js
+│   │   └── otp.js
+│   ├── routes/
+│   │   ├── userRouter.js
+│   │   ├── productRouter.js
+│   │   ├── orderRouter.js
+│   │   ├── reviewRouter.js
+│   │   └── inquiryRouter.js
+│   ├── index.js                     # Entry point: Express + MongoDB + middleware
+│   └── package.json
+│
+└── kv-audio-e2e-tests/              # Playwright E2E Test Suite
+    ├── tests/
+    │   ├── assertions/              # UI assertion test specs
+    │   │   ├── homepage.spec.js
+    │   │   ├── login-page.spec.js
+    │   │   ├── navigation.spec.js
+    │   │   ├── product-list.spec.js
+    │   │   ├── product-overview.spec.js
+    │   │   └── category_filter.spec.js
+    │   ├── fixture-showcase.spec.js # Custom Playwright fixtures
+    │   ├── products-mock.spec.js    # API mocking scenarios
+    │   ├── failing-demo.spec.js
+    │   └── example.spec.js
+    ├── fixtures/
+    ├── mocks/
+    ├── utils/
+    ├── screenshots/                 # Captured on test failures
+    ├── playwright-report/           # Generated HTML report
+    ├── playwright.config.js
+    ├── .env.example
+    └── package.json
+```
+
+---
+
+## ⚙️ Setup Instructions
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn package manager
-- Running backend API (see [backend README](../kv-audio-backend/README.md))
-- Google OAuth credentials (for Google login)
+- [Node.js](https://nodejs.org/) v18+
+- [npm](https://www.npmjs.com/) v9+
+- A [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
+- A [Supabase](https://supabase.com/) project (for image storage)
+- A [Google Cloud OAuth 2.0](https://console.cloud.google.com/) Client ID
 
-### Installation
+---
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd kv-audio-frontend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**
-   
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_BACKEND_URL=http://localhost:3000
-   VITE_GOOGLE_CLIENT_ID=your_google_client_id
-   ```
-
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-   The application will start on `http://localhost:5173`
-
-### Build for Production
+### 1. Clone the Repository
 
 ```bash
-npm run build
+git clone https://github.com/<your-username>/kv-audio-playwright-qe.git
+cd kv-audio-playwright-qe
 ```
 
-The optimized production build will be created in the `dist/` directory.
+---
 
-### Preview Production Build
+### 2. Backend Setup
 
 ```bash
-npm run preview
+cd kv-audio-backend
+npm install
 ```
 
----
+Create a `.env` file in `kv-audio-backend/`:
 
-## 📁 Project Structure
-
-```
-kv-audio-frontend/
-├── public/                    # Static assets
-│   ├── KV_Audio_Logo.png     # Company logo
-│   ├── home-hero.png         # Hero section images
-│   └── ...
-├── src/
-│   ├── assets/               # Dynamic assets
-│   ├── components/           # Reusable components
-│   │   ├── Footer/          # Footer component
-│   │   ├── header.jsx       # Navigation header
-│   │   ├── mobileNavPannel.jsx  # Mobile navigation
-│   │   ├── productCard.jsx  # Product card component
-│   │   ├── bookingItem.jsx  # Booking item component
-│   │   └── imageSlider.jsx  # Image carousel
-│   ├── pages/               # Page components
-│   │   ├── home/            # Home page modules
-│   │   │   ├── homePage.jsx       # Main home layout
-│   │   │   ├── home.jsx           # Hero & reviews
-│   │   │   ├── items.jsx          # Product listing
-│   │   │   ├── productOverview.jsx # Product details
-│   │   │   ├── bookingPage.jsx    # Rental booking
-│   │   │   ├── aboutUs.jsx        # About page
-│   │   │   ├── contactUs.jsx      # Contact page
-│   │   │   └── gallery.jsx        # Gallery page
-│   │   ├── login/           # Authentication
-│   │   │   └── login.jsx
-│   │   ├── register/        # User registration
-│   │   │   └── register.jsx
-│   │   ├── verifyEmail/     # Email verification
-│   │   │   └── verifyEmail.jsx
-│   │   └── admin/           # Admin panel
-│   │       ├── adminPage.jsx      # Admin dashboard
-│   │       ├── adminItemsPage.jsx # Product management
-│   │       ├── addItemPage.jsx    # Add new product
-│   │       ├── updateItemsPage.jsx # Update product
-│   │       ├── adminBookingPage.jsx # Order management
-│   │       ├── adminReviewsPage.jsx # Review moderation
-│   │       └── adminUsersPage.jsx  # User management
-│   ├── utils/               # Utility functions
-│   ├── App.jsx             # Main app component
-│   ├── main.jsx            # Application entry point
-│   └── index.css           # Global styles
-├── .env                    # Environment variables
-├── .gitignore             # Git ignore rules
-├── eslint.config.js       # ESLint configuration
-├── index.html             # HTML template
-├── package.json           # Dependencies and scripts
-├── vite.config.js         # Vite configuration
-├── vercel.json            # Vercel deployment config
-└── README.md              # Project documentation
+```env
+MONGO_URL=mongodb+srv://<username>:<password>@cluster.mongodb.net/<dbname>
+JWT_SECRET=your_jwt_secret_key
+EMAIL_USER=your_gmail_address@gmail.com
+EMAIL_PASSWORD=your_gmail_app_password
 ```
 
----
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `VITE_BACKEND_URL` | Backend API base URL | Yes |
-| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID | Yes (for Google login) |
-
-> **Note**: All environment variables in Vite must be prefixed with `VITE_` to be exposed to the client.
-
-### Vite Configuration
-
-The `vite.config.js` file includes:
-- React plugin for Fast Refresh
-- Dev server configuration
-- Build optimizations
-
-### Routing Configuration
-
-Routes are defined in `App.jsx`:
-- `/` - Home page with nested routes
-- `/login` - User login
-- `/register` - User registration
-- `/verify-email` - Email verification
-- `/admin/*` - Admin dashboard and sub-routes
+> **Note:** Use a [Gmail App Password](https://support.google.com/accounts/answer/185833), not your regular Gmail password.
 
 ---
 
-## 🧩 Key Components
-
-### Header Component
-- Responsive navigation bar
-- User profile display when logged in
-- Mobile-friendly hamburger menu
-- Logo and branding
-- Dynamic menu items based on auth status
-
-### Footer Component
-- Company information
-- Quick links to important pages
-- Contact details
-- Social media links
-- Copyright information
-
-### Product Card
-- Product image gallery
-- Product information display
-- Price and availability
-- Call-to-action buttons
-- Responsive grid layout
-
-### Booking Item
-- Rental item details
-- Date range selection
-- Quantity management
-- Price calculation
-- Add to cart functionality
-
-### Mobile Navigation Panel
-- Slide-out navigation menu
-- Touch-friendly interface
-- Smooth animations
-- User profile integration
-
-### Image Slider
-- Carousel for product images
-- Touch/swipe support
-- Responsive design
-- Navigation controls
-
----
-
-## 📄 Pages
-
-### Public Pages
-
-#### Home (`/`)
-- Hero section with call-to-action
-- Featured products showcase
-- Customer reviews display
-- Company highlights
-- Responsive design
-
-#### Products (`/items`)
-- Product catalog with grid layout
-- Search and filter functionality
-- Product cards with images
-- Category navigation
-
-#### Product Overview (`/items/:key`)
-- Detailed product information
-- Image gallery
-- Specifications and dimensions
-- Rental booking button
-- Related products
-
-#### About Us (`/about`)
-- Company mission and vision
-- Team information
-- Values and commitment
-- Professional imagery
-
-#### Contact Us (`/contact`)
-- Contact form with validation
-- Location information
-- Business hours
-- Email and phone details
-
-#### Gallery (`/gallery`)
-- Image showcase
-- Project highlights
-- Event photos
-
-### Authentication Pages
-
-#### Login (`/login`)
-- Email/password authentication
-- Google OAuth integration
-- "Remember me" functionality
-- Password visibility toggle
-- Link to registration
-- Professional background imagery
-
-#### Register (`/register`)
-- User registration form
-- Input validation
-- Password strength requirements
-- Terms and conditions
-- Automatic email verification trigger
-
-#### Email Verification (`/verify-email`)
-- OTP input interface
-- Resend OTP functionality
-- Countdown timer
-- Success/error handling
-
-### Customer Pages
-
-#### Booking Page (`/booking`)
-- Product selection
-- Date range picker
-- Rental period calculation
-- Total price display
-- Order submission
-- Booking confirmation
-
-### Admin Pages
-
-#### Admin Dashboard (`/admin`)
-- Overview statistics
-- Quick access to management sections
-- Recent activities
-- System notifications
-- Professional layout
-
-#### Product Management (`/admin/items`)
-- Product list with search
-- Edit/delete actions
-- Stock status
-- Quick filters
-
-#### Add Product (`/admin/add-item`)
-- Product creation form
-- Multiple image upload
-- Category selection
-- Validation
-
-#### Update Product (`/admin/update-item/:key`)
-- Edit product details
-- Update images
-- Modify availability
-- Save changes
-
-#### Order Management (`/admin/bookings`)
-- Order list with filters
-- Approval/rejection workflow
-- Status updates
-- Customer information
-
-#### Review Management (`/admin/reviews`)
-- Review moderation queue
-- Approve/reject reviews
-- Delete inappropriate content
-- Customer details
-
-#### User Management (`/admin/users`)
-- User list with search
-- Block/unblock users
-- View user details
-- Role management
-
----
-
-## 🔐 Authentication
-
-### Authentication Flow
-
-1. **Registration**
-   - User fills registration form
-   - Email verification OTP sent
-   - User verifies email
-   - Account activated
-
-2. **Login**
-   - Email/password authentication
-   - Google OAuth (alternative)
-   - JWT token received
-   - Token stored in localStorage
-   - User redirected based on role
-
-3. **Protected Routes**
-   - Token verification on protected pages
-   - Automatic redirect to login if unauthenticated
-   - Role-based access control
-   - Admin routes protected
-
-### Token Management
-
-```javascript
-// Token is stored in localStorage
-localStorage.setItem('token', jwtToken);
-
-// Token is sent with API requests
-axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-```
-
-### User Roles
-
-- **Customer**: Access to public pages, booking, and reviews
-- **Admin**: Full access to admin panel and all features
-
----
-
-## 🚀 Deployment
-
-### Vercel Deployment
-
-The application is configured for Vercel deployment with `vercel.json`:
-
-```json
-{
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ]
-}
-```
-
-This ensures proper routing for the SPA.
-
-### Deployment Steps
-
-1. **Build the application**
-   ```bash
-   npm run build
-   ```
-
-2. **Deploy to Vercel**
-   ```bash
-   vercel --prod
-   ```
-
-3. **Configure environment variables** in Vercel dashboard
-
-### Production Considerations
-
-- ✅ Environment variables properly set
-- ✅ Backend API URL updated to production
-- ✅ CORS configured on backend
-- ✅ Google OAuth redirect URLs updated
-- ✅ SSL/HTTPS enabled
-- ✅ Static assets optimized
-- ✅ Code splitting enabled
-
----
-
-## 🧪 Development
-
-### Development Scripts
+### 3. Frontend Setup
 
 ```bash
-# Start dev server with hot reload
+cd kv-audio-frontend
+npm install
+```
+
+Create a `.env` file in `kv-audio-frontend/`:
+
+```env
+VITE_BACKEND_URL=http://localhost:3000
+VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+---
+
+### 4. E2E Tests Setup
+
+```bash
+cd kv-audio-e2e-tests
+npm install
+npx playwright install
+```
+
+Create a `.env` file in `kv-audio-e2e-tests/` (refer to `.env.example`):
+
+```env
+BASE_URL=http://localhost:5173
+```
+
+---
+
+## ▶️ How to Run
+
+### Start the Backend
+
+```bash
+cd kv-audio-backend
+npm start
+```
+
+API server runs at **`http://localhost:3000`**
+
+---
+
+### Start the Frontend
+
+```bash
+cd kv-audio-frontend
 npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Lint code
-npm run lint
 ```
 
-### Code Quality
-
-- **ESLint**: Enforces code quality and consistency
-- **React Hooks Rules**: Ensures proper hook usage
-- **React Refresh**: Hot module replacement during development
-
-### Best Practices
-
-- Component-based architecture
-- Separation of concerns (pages, components, utils)
-- Responsive design with mobile-first approach
-- Accessibility considerations
-- Clean and maintainable code
-- Proper error handling
-- Toast notifications for user feedback
+Frontend dev server runs at **`http://localhost:5173`**
 
 ---
 
-## 🎨 UI/UX Design Principles
+## 🧪 Running Tests
 
-### Design System
-- **Modern Aesthetic**: Clean, professional, and premium look
-- **Color Palette**: Carefully curated colors with gradients
-- **Typography**: Google Fonts for modern appearance
-- **Spacing**: Consistent padding and margins
-- **Animations**: Smooth transitions and micro-interactions
+> **Important:** Start both the **frontend** and **backend** before running tests.
 
-### Responsive Design
-- Mobile-first approach
-- Breakpoints for tablet and desktop
-- Touch-friendly interactive elements
-- Optimized images for different screen sizes
+```bash
+cd kv-audio-e2e-tests
+```
 
-### User Experience
-- Intuitive navigation
-- Clear call-to-action buttons
-- Consistent layout across pages
-- Loading states and feedback
-- Error handling with helpful messages
+| Command | Description |
+|---|---|
+| `npm test` | Run all tests headlessly across all configured browsers |
+| `npm run test:headed` | Run tests with the browser window visible |
+| `npm run test:debug` | Step through tests in debug mode |
+| `npm run test:ui` | Open the Playwright interactive UI |
+| `npm run test:chrome` | Run on Chromium only |
+| `npm run test:firefox` | Run on Firefox only |
+| `npm run test:mobile` | Run with a mobile Chrome viewport |
+| `npm run report` | Open the last generated HTML report |
+| `npm run codegen` | Launch Playwright's test recorder |
+
+### Test Suites
+
+| Suite | What It Covers |
+|---|---|
+| `tests/assertions/` | UI assertions: homepage, login, navigation, product list, product overview, category filters |
+| `fixture-showcase.spec.js` | Custom Playwright fixtures: authenticated sessions, cart state, admin access |
+| `products-mock.spec.js` | API mocking: success, empty state, HTTP 500 error, slow response, network failure |
+| `failing-demo.spec.js` | Intentional failure demo for reporting demonstration |
+| `example.spec.js` | Basic sanity checks and Playwright introductory examples |
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contribution
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Core System
+
+The **KV Audio** platform — including the full-stack architecture, REST API design, authentication system (JWT, Google OAuth, OTP email verification), booking & order workflows, admin dashboard, and all UI/UX — was independently designed and developed by **Nisal Gunathilaka** as a personal full-stack portfolio project.
+
+### End-to-End Testing
+
+The Playwright E2E test suite (`kv-audio-e2e-tests`) was developed as part of a **university group assignment**, implemented in collaboration with peers. The testing work covers test strategy and design, custom fixture architecture, API mocking, cross-browser execution, and HTML reporting — and forms an integral part of the overall project.
 
 ---
 
 ## 📄 License
 
-This project is proprietary and confidential.
+This project is licensed under the [ISC License](https://opensource.org/licenses/ISC).
 
 ---
 
-## 🔗 Related Projects
-
-- [KV Audio Backend API](../kv-audio-backend/README.md)
-
----
-
-## 👥 Support
-
-For support or inquiries:
-- Submit an inquiry through the Contact Us page
-- Contact the development team directly
-
----
-
-## 🔄 Version History
-
-- **v1.0.0** - Initial release
-  - Complete user authentication system
-  - Product catalog and booking system
-  - Admin dashboard and management tools
-  - Review and inquiry systems
-  - Mobile-responsive design
-  - Google OAuth integration
-
----
-
-**Developed with ❤️ by Nisal Gunathilaka**
